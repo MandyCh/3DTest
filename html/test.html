@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <script src="../libs/t.js"></script>
+    <script src="../libs/twaver.js"></script>
+    <script src="../libs/twaver-make.js"></script>
+    <title>test</title>
+</head>
+
+<body>
+    <div onload="init()"></div>
+    <script>
+        function init() {
+            var pathH = new mono.Path();
+            pathH.moveTo(0, 0, 0);
+            pathH.lineTo(0, 100, 0);
+            pathH.lineTo(100, 100, 0);
+            pathH.curveTo(300, 100, -200, 500, 100, 0);
+            pathH.lineTo(600, 100, 0);
+            var pathLine = new mono.PathLine(pathH);
+            pathLine.s({
+                'm.color': 'red',
+                'm.ambient': 'red',
+            });
+        }
+    </script>
+</body>
+
+</html>
