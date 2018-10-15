@@ -1,8 +1,6 @@
-import { cardjson, jsonObject, line, railInfo, points, smoke, laser } from './carddata.js';
+import { cardjson, jsonObject, line, railInfo, points, smoke, laser, watercable } from './carddata.js';
 import { demo } from './demo.js';
-console.log(demo);
-console.log(line);
-console.log(smoke);
+
 
 init();
 var network;
@@ -15,9 +13,10 @@ function init(htmlElementId) {
     network.isSelectable = function(element) { return false };
 
     //镜头shezhi
-    var camera = new mono.PerspectiveCamera(30, 1.5, 30, 30000); //新建镜头对象
+    var camera = new mono.PerspectiveCamera(20, 1.5, 30, 30000); //新建镜头对象
     // var camera = network.getCamera();获取network镜头对象
     // camera.setPosition(-4000, 3000, -6000);//镜头位置
+    // camera.setPosition(4000, 3000, 6000); //镜头位置
     camera.setPosition(4000, 3000, 6000); //镜头位置
     camera.lookAt(new mono.Vec3(0, 0, 0)); //设置镜头焦点
     network.setCamera(camera);
@@ -41,9 +40,6 @@ function init(htmlElementId) {
 
     network.setShowFps(true);
 
-
-
-
     /**
      * 双击找到第一个目标物体，切换动画
      */
@@ -63,7 +59,6 @@ function init(htmlElementId) {
     for (var i = 0; i < object3ds.length; i++) {
         var obj = object3ds[i];
         network.getDataBox().addByDescendant(obj); //添加数据
-        console.log(obj)
     }
 
     //接待桌
@@ -84,12 +79,14 @@ function init(htmlElementId) {
     network.getDataBox().addByDescendant(object3d);
 
     //ups 
-    var object3d = make.Default.load('twaver.idc.ups');
+    var object3d = make.Default.load('twaver.idc.ups1');
     object3d.setPosition(-200, object3d.getHeight() / 2, -900)
     network.getDataBox().addByDescendant(object3d);
 
     //机柜
     createRacks();
+
+
     //烟雾
     var smokes = make.Default.load(smoke);
     for (var i = 0; i < smokes.length; i++) {
@@ -100,7 +97,6 @@ function init(htmlElementId) {
 
     //红外线
     var lasers = make.Default.load(laser);
-    console.log(lasers);
     for (var i = 0; i < lasers.length; i++) {
         network.getDataBox().addByDescendant(lasers[i]);
 
@@ -112,6 +108,15 @@ function init(htmlElementId) {
         var obj = connections[i];
         network.getDataBox().addByDescendant(obj); //添加数据
     }
+
+    //漏水
+    var watercables = make.Default.load(watercable);
+    for (var i = 0; i < watercables.length; i++) {
+        var obj = watercables[i];
+        network.getDataBox().addByDescendant(obj); //添加数据
+    }
+
+    // createWaterLeaking(box)
 
     //走线架
     var rail = createRail(railInfo);
@@ -177,8 +182,15 @@ function init(htmlElementId) {
             }
         },
         {
-            label: '漏水监控',
-            icon: 'water.png'
+            label: '漏水监测',
+            icon: 'water.png',
+            clickFunction: function() {
+                var showing = network.waterView;
+                resetView(network);
+                if (!showing) {
+                    toggleWaterView(network);
+                }
+            }
         }, {
             label: '防盗监控',
             icon: 'security.png',
@@ -335,6 +347,9 @@ function resetView(network) {
     if (network.laserView) {
         toggleLaserView(network)
     }
+    if (network.waterView) {
+        toggleWaterView(network)
+    }
 }
 
 /**
@@ -368,16 +383,8 @@ function creatorNetWorkDevices(x, y, z, json) {
         u.setPositionZ(z)
         network.getDataBox().addByDescendant(u); //添加数据
     }
-    // console.log(udevice)
 }
 
-function createSmoke() {
-    var smokes = make.Default.load(smoke);
-    for (var i = 0; i < smokes.length; i++) {
-        var obj = smokes[i];
-        network.getDataBox().addByDescendant(obj);
-    }
-}
 
 function creatorComboDevices(x, y, z, json) {
     creatorCards(x, y, z);
@@ -434,7 +441,6 @@ function createRacks() {
                 return label;
             })(i)
         }); //equip is comboNode
-
         var equip_1 = make.Default.load({
             'id': 'twaver.idc.rack200',
             'severity': 'mono.AlarmSeverity.CRITICAL',
@@ -459,7 +465,6 @@ function createRacks() {
                 return label;
             })(i)
         });
-        // console.log(equip)
         equip.setPositionX(-rackNumber / 4 * rackWidth + rackWidth / 2 - 500 + i * rackWidth / 2);
         equip_1.setPositionX(-rackNumber / 4 * rackWidth + rackWidth / 2 + 500 + i * rackWidth / 2);
         equip_2.setPositionX(-rackNumber / 4 * rackWidth + rackWidth / 2 - 500 + i * rackWidth / 2);
@@ -510,6 +515,33 @@ function createRail(params) {
     rail.setVisible(false);
     rail.setClient('type', 'rail');
     return rail;
+}
+
+
+function createWaterLeaking(bx) {
+    var sign = new mono.Billboard();
+    sign.s({
+        'm.texture.image': '../res/images/alert.png'
+    })
+    sign.setScale(80, 160, 1);
+    sign.setPosition(300, 95, 50);
+    bx.add(sign);
+
+    var ball = new mono.Sphere();
+    ball.s({
+        'm.transparent': true,
+        'm.opacity': 0.8,
+        'm.type': 'phong',
+        'm.color': '#58FAD0',
+        'm.ambient': '#81BEF7',
+        'm.specularStrength': 50,
+        'm.normalmap.image': '../res/images/rack_inside_normal.jpg',
+    })
+    ball.setPosition(300, 10, 50);
+    ball.setScale(1, 0.1, 0.7);
+    bx.add(ball);
+
+    bx.waterLeakingObjects = [sign, ball];
 }
 
 /**
@@ -674,13 +706,56 @@ function startSmokeAnimation(nt) {
 function toggleLaserView(nt) {
     nt.laserView = !nt.laserView;
     nt.getDataBox().forEach(function(element) {
-        console.log(element)
         if (element.getClient('type') === 'laser') {
             element.setVisible(nt.laserView);
         }
     })
 }
 
+
+function toggleWaterView(nt) {
+    nt.waterView = !nt.waterView;
+    if (nt.waterView) {
+        createWaterLeaking(nt.getDataBox());
+        nt.getDataBox().oldAlarms = nt.getDataBox().getAlarmBox().toDatas();
+        nt.getDataBox().getAlarmBox().clear();
+    } else {
+        if (nt.getDataBox().waterLeakingObjects) {
+            for (var i = 0; i < nt.getDataBox().waterLeakingObjects.length; i++) {
+                nt.getDataBox().remove(nt.getDataBox().waterLeakingObjects[i]);
+            }
+        }
+        nt.getDataBox().oldAlarms.forEach(function(alarm) {
+            nt.getDataBox().getAlarmBox().add(alarm);
+        });
+    }
+    nt.getDataBox().forEach(function(element) {
+        var type = element.getClient('type');
+        if (type === 'watercable') {
+            element.setVisible(nt.waterView);
+        } else if (type && type !== 'floor' && type !== 'glass_wall' && type !== 'miehuoqi') {
+            if (nt.waterView) {
+                if (type === 'rack200' || type === 'rack_door') {
+                    element.oldTransparent = element.getStyle('m.transparent');
+                    element.oldOpacity = element.getStyle('m.opacity');
+                    element.setStyle('m.transparent', true);
+                    element.setStyle('m.opacity', 0.4);
+                } else {
+                    element.oldVisible = element.isVisible();
+                    element.setStyle('m.visible', false);
+                }
+            } else {
+                if (type === 'rack200' || type === 'rack_door') {
+                    element.setStyle('m.transparent', element.oldTransparent);
+                    element.setStyle('m.opacity', element.oldOpacity);
+                } else {
+                    element.setVisible(element.oldVisible);
+                    element.setStyle('m.visible', true);
+                }
+            }
+        }
+    });
+}
 
 /**
  * 镜头移动切换
@@ -735,7 +810,6 @@ function handleDoubleClick(e, nt) {
         var element = firstClickObject.element;
         var newTarget = firstClickObject.point;
         var oldTarget = camera.getTarget();
-        console.log(element.getClient('id'));
         if (element.getClient('animation')) {
             make.Default.playAnimation(element, element.getClient('animation'))
         } else if (element.getClient('dbl.func')) {

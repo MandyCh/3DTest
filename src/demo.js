@@ -5,8 +5,6 @@ export var demo = {
         return demo.RES_PATH + '/' + file;
     },
 
-
-
     create2DPath: function(pathData) {
         var path;
         for (var j = 0; j < pathData.length; j++) {

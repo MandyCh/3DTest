@@ -3190,6 +3190,31 @@
         return connection;
     })
 
+    make.Default.register('twaver.xianlu.watercable', function(json) {
+        var color = json.color;
+        var flow = json.flow;
+        var y = json.y;
+        var data = json.data;
+        var path = create3DPath(data);
+        path = mono.PathNode.prototype.adjustPath(path, 5);
+        var watercable = new mono.PathNode(path, 100, 5);
+        watercable.s({
+            'm.type': 'phong',
+            'm.specularStrength': 30,
+            'm.color': color,
+            'm.ambient': color,
+            'm.texture.image': '../res/images/flow.jpg',
+            'm.texture.repeat': new mono.Vec2(200, 1),
+            'm.texture.flipX': flow > 0,
+        });
+        watercable.setClient('flow', flow);
+        watercable.setStartCap('plain');
+        watercable.setEndCap('plain');
+        // watercable.setPositionY(y);
+        watercable.setClient('type', 'watercable');
+        watercable.setVisible(false);
+        return watercable;
+    })
 
     make.Default.register('twaver.idc.watercable.top', function(json) {
         var cableJson = {
@@ -4564,6 +4589,7 @@
             'front.m.envmap.image': [pic, pic, pic, pic, pic, pic],
         });
         rack.setPosition(x, height / 4 - 50 - y, z);
+        // rack.setClient('type', 'rack200');
         rack.shadow = shadow;
 
         var cut = new mono.Cube(55.5, height - offset, depth * 0.7);
@@ -4577,6 +4603,7 @@
             'back.m.texture.image': getImagePath('rack_panel.png'),
         });
         cut.setPosition(0, 0, rack.getDepth() / 2 - cut.getDepth() / 2 + 2);
+        // cut.setClient('type', 'rack200');
 
         var newRack;
         if (json.objectId) {
@@ -4607,7 +4634,7 @@
         make.Default.setPositionY(newRack, y);
         newRack.setClient('label', label);
 
-        newRack.setClient('type', 'rack');
+        newRack.setClient('type', 'rack200');
         newRack.setClient('loaded', false);
         if (callback) callback(newRack);
         return newRack;
@@ -7989,7 +8016,6 @@
         video.setAttribute('src', '../res/images/test.mp4');
         video.setAttribute('controls', 'true');
         video.setAttribute('autoplay', 'true');
-
     }
 
     //摄像头
@@ -8039,6 +8065,7 @@
         parent.setClient('dbl.func', function() {
             utils.showVideoDialog('Camera # :C300-493A | Status:OK')
         })
+        parent.setClient('type', 'camera');
         callback && callback(parent);
         return parent;
     }, {
@@ -8518,6 +8545,7 @@
         plant.setPosition(x, 0, z);
         make.Default.setPositionY(plant, y);
         plant.setScale(scaleX, scaleY, scaleZ);
+        plant.setClient('type', 'plant');
         make.Default.setObject3dCSProps(plant, json);
         if (callback) callback(plant);
         return plant;
@@ -8791,6 +8819,9 @@
             'front.m.texture.image': image,
             'back.m.texture.image': image,
         });
+        cube.setClient('dbl.func', function() {
+            utils.showDoorTable()
+        })
         cube.setClient('type', 'door_control');
         cube.setPosition(x, 0, z);
         make.Default.setPositionY(cube, y);
